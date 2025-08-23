@@ -1,8 +1,7 @@
+import numpy as np
+from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
-from utils.chroma_utils import ChromaVectorDB
 from dotenv import load_dotenv
-import os
-
 from utils.llm_utils import query_llm
 
 load_dotenv()
@@ -31,39 +30,69 @@ def chunk_text(text, single_chunk_size, overlap):
     return chunks
 
 
-def build_vector_database(collection_name):
+def cosine_similarity(vec1, vec2):
     """
-    构建向量数据库
+    计算两个向量的余弦相似度，返回一个相似度值
+
+    其实就是计算两个向量夹角的余弦值，值越大，相似度越高
+
+    Args:
+    vec1 (np.ndarray): The first vector.
+    vec2 (np.ndarray): The second vector.
+
     Returns:
-        ChromaVectorDB: 向量数据库实例
+    float: The cosine similarity between the two vectors.
     """
-    # 创建 Chroma 向量数据库
-    chroma_db = ChromaVectorDB()
-    chroma_db.clear_all_collections()
-    chroma_db.create_collection(collection_name)
+    # Compute the dot product of the two vectors and divide by the product of their norms
+    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+
+def semantic_search(text_chunks, knowledge_base_embeddings, query_embeddings, k=5):
+    """
+    语义搜索，计算相似度并返回最相关的文本块
     
-    return chroma_db
+    Args:
+        text_chunks: 知识库文本块列表
+        knowledge_base_embeddings: 知识库嵌入向量列表
+        query_embeddings: 查询嵌入向量
+        k: 返回结果数量
+    
+    Returns:
+        list: 包含文本块和相似度分数的字典列表
+    """
+    similarity_scores = []
+    
+    # 确保查询向量是一维的
+    if isinstance(query_embeddings, list):
+        query_vector = query_embeddings[0]
+    elif hasattr(query_embeddings, 'shape') and len(query_embeddings.shape) > 1:
+        query_vector = query_embeddings[0]
+    else:
+        query_vector = query_embeddings
 
+    for i, chunk_embedding in enumerate(knowledge_base_embeddings):
+        similarity_score = cosine_similarity(chunk_embedding, query_vector)
+        similarity_scores.append((i, similarity_score))
 
-def create_embeddings(chroma_db, text_chunks):
-    embeddings = chroma_db.create_embeddings(text_chunks)
-    return embeddings
-
-
-def semantic_search(chroma_db, query, text_chunks, embeddings, k=2):
-    # 添加文本块到向量数据库
-    chroma_db.add_texts(text_chunks, embeddings)
-
-    # 生成查询嵌入向量
-    query_embedding = chroma_db.create_embeddings([query])
-
-    # 执行语义搜索
-    results = chroma_db.search(query_embedding, k)
-
+    # 按相似度降序排序
+    similarity_scores.sort(key=lambda x: x[1], reverse=True)
+    
+    # 返回包含文本块和相似度分数的结果
+    results = []
+    for index, score in similarity_scores[:k]:
+        results.append({
+            'text': text_chunks[index],
+            'score': score,
+            'index': index
+        })
+    
     return results
 
 
 if __name__ == "__main__":
+
+    query = "孙悟空的兵器是什么？"
+
     # 1. 提取文本
     print("正在提取西游记文本...")
     extract_text = extract_text_from_markdown()
@@ -71,40 +100,40 @@ if __name__ == "__main__":
 
     # 2. 分割文本
     print("正在分割文本...")
-    text_chunks = chunk_text(extract_text, 1000, 200)
+    knowledge_chunks = chunk_text(extract_text, 1000, 200)
     # print(f"分割为 {len(text_chunks)} 个文本块")
 
     # 3. 构建向量数据库
-    print("正在构建向量数据库...")
-    chroma_db = build_vector_database("xiyouji_collection")
+    print("正在构建向量模型...")
+    embedding_model = EmbeddingModel()
 
-    # 4. 显示数据库信息
-    embeddings = create_embeddings(chroma_db, text_chunks)
-    # print(f"embeddings: {embeddings}")
+    # 4. 构建知识库向量集
+    print("正在构建知识库向量集...")
+    knowledge_embeddings = embedding_model.create_embeddings(knowledge_chunks)
 
-    # 5. 测试搜索功能
-    print("\n测试搜索功能...")
-    test_query = "孙悟空的兵器是什么？"
+    # 5. 构建问题向量
+    print("正在构建问题向量...")
+    query_embeddings = embedding_model.create_embeddings([query])
+
+    # 6. 向量相似度检索
+    print("向量相似度检索...")
     top_chunks = semantic_search(
-        chroma_db, test_query, text_chunks, embeddings, 10)
+        knowledge_chunks, knowledge_embeddings, query_embeddings, 5)
 
-    print(f"查询: '{test_query}'")
     print("搜索结果:")
-    for i, (doc, metadata) in enumerate(zip(top_chunks['documents'][0], top_chunks['metadatas'][0])):
-        print(f"{i+1}. 相似度: {top_chunks['distances'][0][i]:.4f}")
-        print(f"   文档: {doc[:100]}...")
-        print(f"   元数据: {metadata}")
+    for i, result in enumerate(top_chunks):
+        print(f"{i+1}. 相似度分数: {result['score']:.4f}")
+        print(f"   文档: {result['text'][:100]}...")
         print()
-        
+
     system_prompt = """
     你是一个AI助手，请严格根据以下信息回答问题。如果信息中没有答案，请回答“我不知道”。"""
+
+    user_prompt = "\n".join(
+        [f"上下文内容 {i + 1} :\n{result['text']}\n========\n" 
+         for i, result in enumerate(top_chunks)])
     
-    user_prompt = "\n".join([f"Context {i + 1}:\n{chunk}\n========\n" for i, chunk in enumerate(top_chunks['documents'][0])])
-    user_prompt = f"{user_prompt}\nQuestion: {test_query}"
-    
+    user_prompt = f"{user_prompt}\nQuestion: {query}"
+
     result = query_llm(system_prompt, user_prompt)
     print(f"final result: {result}")
-        
-    
-        
-    
