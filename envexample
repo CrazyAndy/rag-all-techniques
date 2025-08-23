@@ -1,0 +1,13 @@
+# OpenAI API Configuration
+OPENAI_API_KEY=""
+OPENAI_API_BASE=""
+
+# Model Configuration
+DEFAULT_MODEL=""
+EMBEDDING_MODEL=""
+
+# Local Model Path (optional)
+# 如果您有本地模型，请设置此路径，例如：
+# LOCAL_MODEL_PATH="/path/to/your/local/model"
+LOCAL_MODEL_PATH=""
+
