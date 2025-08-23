@@ -1,5 +1,5 @@
 from utils.file_utils import extract_text_from_markdown
-from utils.chroma_utils import create_chroma_db
+from utils.chroma_utils import ChromaVectorDB
 from dotenv import load_dotenv
 import os
 
@@ -31,19 +31,17 @@ def chunk_text(text, single_chunk_size, overlap):
     return chunks
 
 
-def build_vector_database():
+def build_vector_database(collection_name):
     """
     构建向量数据库
-
-    Args:
-        text_chunks (list): 文本块列表
-
     Returns:
         ChromaVectorDB: 向量数据库实例
     """
     # 创建 Chroma 向量数据库
-    chroma_db = create_chroma_db()
-    chroma_db.delete_collection()
+    chroma_db = ChromaVectorDB()
+    chroma_db.clear_all_collections()
+    chroma_db.create_collection(collection_name)
+    
     return chroma_db
 
 
@@ -78,7 +76,7 @@ if __name__ == "__main__":
 
     # 3. 构建向量数据库
     print("正在构建向量数据库...")
-    chroma_db = build_vector_database()
+    chroma_db = build_vector_database("xiyouji_collection")
 
     # 4. 显示数据库信息
     embeddings = create_embeddings(chroma_db, text_chunks)
@@ -101,7 +99,7 @@ if __name__ == "__main__":
     system_prompt = """
     你是一个AI助手，请严格根据以下信息回答问题。如果信息中没有答案，请回答“我不知道”。"""
     
-    user_prompt = "\n".join([f"Context {i + 1}:\n{chunk}\n========\n" for i, chunk in enumerate(top_chunks)])
+    user_prompt = "\n".join([f"Context {i + 1}:\n{chunk}\n========\n" for i, chunk in enumerate(top_chunks['documents'][0])])
     user_prompt = f"{user_prompt}\nQuestion: {test_query}"
     
     result = query_llm(system_prompt, user_prompt)

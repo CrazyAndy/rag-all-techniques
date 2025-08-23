@@ -26,12 +26,6 @@ class ChromaVectorDB:
             )
         )
 
-        # 获取或创建集合
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name,
-            metadata={"description": "西游记文本向量数据库"}
-        )
-
         # 初始化本地嵌入模型
         # 优先使用本地模型路径，如果不存在则使用在线模型
         model_path = os.getenv("LOCAL_MODEL_PATH", None)
@@ -54,6 +48,27 @@ class ChromaVectorDB:
             metadatas=[{"source": "xiyouji.md", "chunk_id": i}
                        for i in range(len(texts))]
         )
+        
+    def create_collection(self, collection_name):
+        """
+        创建新的集合
+        
+        Args:
+            collection_name (str): 集合名称
+        """
+        # 先尝试删除已存在的集合
+        try:
+            self.client.delete_collection(collection_name)
+            print(f"已删除旧集合: {collection_name}")
+        except:
+            pass
+        
+        # 创建新集合
+        self.collection = self.client.create_collection(
+            name=collection_name,
+            metadata={"description": "西游记文本向量数据库"}
+        )
+        print(f"已创建新集合: {collection_name}")
 
     def create_embeddings(self, text_chunks):
         # 生成嵌入向量
@@ -101,13 +116,15 @@ class ChromaVectorDB:
         self.client.delete_collection(self.collection_name)
         print(f"已删除集合: {self.collection_name}")
 
-
-def create_chroma_db():
-    """
-    创建 Chroma 向量数据库实例
-
-    Returns:
-        ChromaVectorDB: 向量数据库实例
-    """
-    return ChromaVectorDB()
-
+    def clear_all_collections(self):
+        """
+        删除所有集合
+        """
+        try:
+            # 获取所有集合
+            collections = self.client.list_collections()
+            for collection in collections:
+                self.client.delete_collection(collection.name)
+                print(f"已删除集合: {collection.name}")
+        except Exception as e:
+            print(f"清除集合时出错: {e}")
