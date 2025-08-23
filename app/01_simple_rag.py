@@ -31,7 +31,7 @@ def chunk_text(text, single_chunk_size, overlap):
     return chunks
 
 
-def build_vector_database(text_chunks):
+def build_vector_database():
     """
     构建向量数据库
 
@@ -43,7 +43,7 @@ def build_vector_database(text_chunks):
     """
     # 创建 Chroma 向量数据库
     chroma_db = create_chroma_db()
-    chroma_db.delete_collection
+    chroma_db.delete_collection()
     return chroma_db
 
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     # 3. 构建向量数据库
     print("正在构建向量数据库...")
-    chroma_db = build_vector_database(text_chunks)
+    chroma_db = build_vector_database()
 
     # 4. 显示数据库信息
     embeddings = create_embeddings(chroma_db, text_chunks)
