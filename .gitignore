@@ -211,3 +211,5 @@ uv.lock
 .DS_Store
 
 chroma_db/
+
+.obsidian/
