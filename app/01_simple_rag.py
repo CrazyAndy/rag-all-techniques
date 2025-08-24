@@ -47,7 +47,7 @@ def cosine_similarity(vec1, vec2):
     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
-def semantic_search(text_chunks, knowledge_base_embeddings, query_embeddings, k=5):
+def similar_search(text_chunks, knowledge_base_embeddings, query_embeddings, k=5):
     """
     语义搜索，计算相似度并返回最相关的文本块
 
@@ -94,30 +94,30 @@ if __name__ == "__main__":
     query = "孙悟空的兵器是什么？"
 
     # 1. 提取文本
-    print("正在提取西游记文本...")
+    print("---1--->正在提取西游记文本...")
     extract_text = extract_text_from_markdown()
     # print(f"文本长度: {len(extract_text)} 字符")
 
     # 2. 分割文本
-    print("正在分割文本...")
+    print("---2--->正在分割文本...")
     knowledge_chunks = chunk_text(extract_text, 1000, 200)
     # print(f"分割为 {len(text_chunks)} 个文本块")
 
     # 3. 构建向量数据库
-    print("正在构建向量模型...")
+    print("---3--->正在构建向量模型...")
     embedding_model = EmbeddingModel()
 
-    # 4. 构建知识库向量集
-    print("正在构建知识库向量集...")
+    # 4. 将知识库文本块向量化
+    print("---4--->正在构建知识库向量集...")
     knowledge_embeddings = embedding_model.create_embeddings(knowledge_chunks)
 
     # 5. 构建问题向量
-    print("正在构建问题向量...")
+    print("---5--->正在构建问题向量...")
     query_embeddings = embedding_model.create_embeddings([query])
 
     # 6. 向量相似度检索
-    print("向量相似度检索...")
-    top_chunks = semantic_search(
+    print("---6--->向量相似度检索...")
+    top_chunks = similar_search(
         knowledge_chunks, knowledge_embeddings, query_embeddings, 5)
 
     print("搜索结果:")
@@ -133,7 +133,8 @@ if __name__ == "__main__":
         [f"上下文内容 {i + 1} :\n{result['text']}\n========\n"
          for i, result in enumerate(top_chunks)])
 
-    user_prompt = f"{user_prompt}\nQuestion: {query}"
+    user_prompt = f"{user_prompt}\n\n Question: {query}"
 
+    # 7. 调用LLM模型，生成回答
     result = query_llm(system_prompt, user_prompt)
-    print(f"final result: {result}")
+    print(f"---7--->final result: {result}")

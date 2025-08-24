@@ -1,9 +1,5 @@
-import chromadb
-from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 import os
-from pathlib import Path
-
 
 class EmbeddingModel:
     def __init__(self):
