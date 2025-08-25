@@ -1,8 +1,8 @@
-import numpy as np
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from dotenv import load_dotenv
 from utils.llm_utils import query_llm
+from utils.similarity_utils import cosine_similarity
 
 load_dotenv()
 
@@ -28,23 +28,6 @@ def chunk_text(text, single_chunk_size, overlap):
     for i in range(0, len(text), single_chunk_size - overlap):
         chunks.append(text[i:i + single_chunk_size])
     return chunks
-
-
-def cosine_similarity(vec1, vec2):
-    """
-    计算两个向量的余弦相似度，返回一个相似度值
-
-    其实就是计算两个向量夹角的余弦值，值越大，相似度越高
-
-    Args:
-    vec1 (np.ndarray): The first vector.
-    vec2 (np.ndarray): The second vector.
-
-    Returns:
-    float: The cosine similarity between the two vectors.
-    """
-    # Compute the dot product of the two vectors and divide by the product of their norms
-    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
 def similar_search(text_chunks, knowledge_base_embeddings, query_embeddings, k=5):
