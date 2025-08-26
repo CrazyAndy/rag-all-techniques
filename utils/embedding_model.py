@@ -12,12 +12,12 @@ class EmbeddingModel:
         model_path = os.getenv("LOCAL_MODEL_PATH", None)
 
         if model_path and os.path.exists(model_path):
-            print(f"使用本地模型: {model_path}")
+            # print(f"使用本地模型: {model_path}")
             self.model = SentenceTransformer(model_path)
         else:
-            print(f"使用在线模型: {model_name}")
+            # print(f"使用在线模型: {model_name}")
             self.model = SentenceTransformer(model_name)
-            print(f"模型名称: {self.model.transformers_model.config.name_or_path}")
+            # print(f"模型名称: {self.model.transformers_model.config.name_or_path}")
             
 
     def create_embeddings(self, text_chunks, batch_size=16, show_progress=False):

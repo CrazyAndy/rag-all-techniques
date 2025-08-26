@@ -1,6 +1,3 @@
-
-
-import logging
 import numpy as np
 from utils.common_utils import create_progress_bar
 from utils.embedding_model import EmbeddingModel
@@ -11,7 +8,6 @@ from utils.similarity_utils import cosine_similarity
 
 
 # 0. 构建全局向量模型
-info("--0--> 构建全局向量模型...")
 embedding_model = EmbeddingModel()
 
 
@@ -71,23 +67,27 @@ def chunk_text(extracted_text, method="percentile", threshold=90):
     knowledge_sentences = extracted_text.split("。")
     # 2. 将每一句都分别向量化
     knowledge_embeddings = []
-    process_bar = create_progress_bar(len(knowledge_sentences), "--2.2--> 为每一句话都创建向量", 100)
+    process_bar = create_progress_bar(
+        len(knowledge_sentences), "--2.2--> 为每一句话都创建向量", 100)
     for index, sentence in enumerate(knowledge_sentences):
-        if sentence:    
-            single_embedding = embedding_model.create_embeddings(sentence, show_progress=False)
+        if sentence:
+            single_embedding = embedding_model.create_embeddings(
+                sentence, show_progress=False)
             process_bar.update_by_count(index + 1)
             knowledge_embeddings.append(single_embedding)
     process_bar.finish()
-    
+
     # 3. 计算每一句与下一句的相似度
     similarities = []
-    process_bar = create_progress_bar(len(knowledge_embeddings) - 1, "--2.3--> 计算每一句与下一句的相似度", 100)
+    process_bar = create_progress_bar(
+        len(knowledge_embeddings) - 1, "--2.3--> 计算每一句与下一句的相似度", 100)
     for i in range(len(knowledge_embeddings) - 1):
-        similarity_score = cosine_similarity(knowledge_embeddings[i], knowledge_embeddings[i + 1])
+        similarity_score = cosine_similarity(
+            knowledge_embeddings[i], knowledge_embeddings[i + 1])
         process_bar.update_by_count(i)
         similarities.append(similarity_score)
     process_bar.finish()
-    
+    print("")
     # 4. 根据相似度计算断点
     info("--2.4--> 根据相似度计算断点...")
     breakpoints = compute_breakpoints(
@@ -143,7 +143,7 @@ def semantic_search(knowledge_chunks, knowledge_embeddings, query_embeddings, k=
 if __name__ == "__main__":
 
     query = "孙悟空被如来佛祖压在了哪里？"
-
+    info(f"--0--> Question: {query}")
     # 1. 提取文本
     info("--1--> 正在提取西游记文本...")
     extract_text = extract_text_from_markdown()
@@ -154,8 +154,9 @@ if __name__ == "__main__":
 
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")
-    knowledge_embeddings = embedding_model.create_embeddings(knowledge_chunks,show_progress=True)
-
+    knowledge_embeddings = embedding_model.create_embeddings(
+        knowledge_chunks, show_progress=True)
+    print("")
     # 4. 构建问题向量
     info("--4--> 正在构建问题向量...")
     query_embeddings = embedding_model.create_embeddings([query])
