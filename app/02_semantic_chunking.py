@@ -1,15 +1,17 @@
 
 
+import logging
 import numpy as np
 from utils.common_utils import create_progress_bar
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from utils.llm_utils import query_llm
+from utils.logger_utils import info
 from utils.similarity_utils import cosine_similarity
 
 
 # 0. 构建全局向量模型
-print("---0--->构建全局向量模型...")
+info("--0--> 构建全局向量模型...")
 embedding_model = EmbeddingModel()
 
 
@@ -65,10 +67,11 @@ def split_into_chunks(sentences, breakpoints):
 
 def chunk_text(extracted_text, method="percentile", threshold=90):
     # 1. 分割文本
+    info("--2.1--> 正在分割文本...")
     knowledge_sentences = extracted_text.split("。")
     # 2. 将每一句都分别向量化
     knowledge_embeddings = []
-    process_bar = create_progress_bar(len(knowledge_sentences), "为每一句话都创建向量", 100)
+    process_bar = create_progress_bar(len(knowledge_sentences), "--2.2--> 为每一句话都创建向量", 100)
     for index, sentence in enumerate(knowledge_sentences):
         if sentence:    
             single_embedding = embedding_model.create_embeddings(sentence, show_progress=False)
@@ -78,7 +81,7 @@ def chunk_text(extracted_text, method="percentile", threshold=90):
     
     # 3. 计算每一句与下一句的相似度
     similarities = []
-    process_bar = create_progress_bar(len(knowledge_embeddings) - 1, "计算每一句与下一句的相似度", 100)
+    process_bar = create_progress_bar(len(knowledge_embeddings) - 1, "--2.3--> 计算每一句与下一句的相似度", 100)
     for i in range(len(knowledge_embeddings) - 1):
         similarity_score = cosine_similarity(knowledge_embeddings[i], knowledge_embeddings[i + 1])
         process_bar.update_by_count(i)
@@ -86,10 +89,12 @@ def chunk_text(extracted_text, method="percentile", threshold=90):
     process_bar.finish()
     
     # 4. 根据相似度计算断点
+    info("--2.4--> 根据相似度计算断点...")
     breakpoints = compute_breakpoints(
         similarities, method=method, threshold=threshold)
 
     # 5. 根据断点分割文本
+    info("--2.5--> 根据断点分割文本...")
     knowledge_chunks = split_into_chunks(knowledge_sentences, breakpoints)
     return knowledge_chunks
 
@@ -140,32 +145,31 @@ if __name__ == "__main__":
     query = "孙悟空被如来佛祖压在了哪里？"
 
     # 1. 提取文本
-    print("---1--->正在提取西游记文本...")
+    info("--1--> 正在提取西游记文本...")
     extract_text = extract_text_from_markdown()
 
     # 2. 分割文本
-    print("---2--->正在分割文本...")
+    info("--2--> 正在分割文本...")
     knowledge_chunks = chunk_text(extract_text, "percentile", 90)
 
     # 3. 将知识库文本块向量化
-    print("---3--->正在构建知识库向量集...")
+    info("--3--> 正在构建知识库向量集...")
     knowledge_embeddings = embedding_model.create_embeddings(knowledge_chunks,show_progress=True)
 
     # 4. 构建问题向量
-    print("---4--->正在构建问题向量...")
+    info("--4--> 正在构建问题向量...")
     query_embeddings = embedding_model.create_embeddings([query])
 
     # 5. 向量相似度检索
-    print("---5--->语义相似度检索...")
+    info("--5--> 语义相似度检索...")
     top_chunks = semantic_search(
         knowledge_chunks, knowledge_embeddings, query_embeddings, 5)
 
-    print(f"---5--->搜索结果:")
+    info(f"--5--> 搜索结果:")
     for i, result in enumerate(top_chunks):
-        print(
-            f"{i+1}. 相似度分数: {result['score']:.4f} ")
-        print(f"   文档: {result['text'][:100]}...")
-        print()
+        info(
+            f"  {i+1}. 相似度分数: {result['score']:.4f} ")
+        info(f"    文档: {result['text'][:100]}...")
 
     system_prompt = """
     你是一个AI助手，严格根据给定的上下文进行回答。如果无法直接从提供的上下文中得出答案，请回复：'我没有足够的信息来回答这个问题。"""
@@ -178,4 +182,4 @@ if __name__ == "__main__":
 
     # 7. 调用LLM模型，生成回答
     result = query_llm(system_prompt, user_prompt)
-    print(f"---6--->final result: {result}")
+    info(f"--6--> final result: {result}")

@@ -1,5 +1,8 @@
 
 
+from utils.logger_utils import info
+
+
 class ProgressBar:
     """
     进度条类，用于显示处理进度
@@ -62,7 +65,6 @@ class ProgressBar:
         完成进度条，显示100%
         """
         self.update(100)
-        print("\n")  # 换行
     
     def _display_progress(self, percentage):
         """
