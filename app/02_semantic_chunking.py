@@ -1,5 +1,5 @@
 import numpy as np
-from utils.common_utils import create_progress_bar
+from tqdm import tqdm
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from utils.llm_utils import query_llm
@@ -67,27 +67,19 @@ def chunk_text(extracted_text, method="percentile", threshold=90):
     knowledge_sentences = extracted_text.split("。")
     # 2. 将每一句都分别向量化
     knowledge_embeddings = []
-    process_bar = create_progress_bar(
-        len(knowledge_sentences), "--2.2--> 为每一句话都创建向量", 100)
-    for index, sentence in enumerate(knowledge_sentences):
+    for sentence in tqdm(knowledge_sentences, desc="--2.2--> 为每一句话都创建向量"):
         if sentence:
             single_embedding = embedding_model.create_embeddings(
-                sentence, show_progress=False)
-            process_bar.update_by_count(index + 1)
+                sentence)
             knowledge_embeddings.append(single_embedding)
-    process_bar.finish()
 
     # 3. 计算每一句与下一句的相似度
     similarities = []
-    process_bar = create_progress_bar(
-        len(knowledge_embeddings) - 1, "--2.3--> 计算每一句与下一句的相似度", 100)
-    for i in range(len(knowledge_embeddings) - 1):
+    for i in tqdm(range(len(knowledge_embeddings) - 1), desc="--2.3--> 计算每一句与下一句的相似度"):
         similarity_score = cosine_similarity(
             knowledge_embeddings[i], knowledge_embeddings[i + 1])
-        process_bar.update_by_count(i)
         similarities.append(similarity_score)
-    process_bar.finish()
-    print("")
+    
     # 4. 根据相似度计算断点
     info("--2.4--> 根据相似度计算断点...")
     breakpoints = compute_breakpoints(
@@ -155,7 +147,7 @@ if __name__ == "__main__":
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")
     knowledge_embeddings = embedding_model.create_embeddings(
-        knowledge_chunks, show_progress=True)
+        knowledge_chunks)
     print("")
     # 4. 构建问题向量
     info("--4--> 正在构建问题向量...")

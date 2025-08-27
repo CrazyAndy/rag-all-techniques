@@ -1,5 +1,4 @@
 import numpy as np
-from utils.common_utils import create_progress_bar
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from utils.llm_utils import query_llm
@@ -35,7 +34,7 @@ def chunk_text(text, single_chunk_size, overlap):
 
 def context_enriched_search(knowledge_chunks, knowledge_embeddings, query_embeddings, k=1, context_size=1):
     similarity_scores = []
-    
+
     # 确保查询向量是一维的
     if isinstance(query_embeddings, list):
         query_vector = query_embeddings[0]
@@ -43,7 +42,7 @@ def context_enriched_search(knowledge_chunks, knowledge_embeddings, query_embedd
         query_vector = query_embeddings[0]
     else:
         query_vector = query_embeddings
-    
+
     # 计算查询与每个文本块嵌入之间的相似度分数
     for i, chunk_embedding in enumerate(knowledge_embeddings):
         # 计算查询嵌入与当前文本块嵌入之间的余弦相似度
@@ -75,7 +74,7 @@ def context_enriched_search(knowledge_chunks, knowledge_embeddings, query_embedd
 
 if __name__ == "__main__":
 
-    query = "孙悟空的兵器是从哪里来的？"
+    query = "玉帝为什么立即派人去西天请如来佛祖？"
     info(f"--0--> Question: {query}")
 
     # 1. 提取文本
@@ -84,13 +83,14 @@ if __name__ == "__main__":
 
     # 2. 分割文本
     info("---2--->正在分割文本...")
-    knowledge_chunks = chunk_text(extract_text, 2000, 200) # 这里single_chunk_size要是设置成1000，就无法检索到相关内容
+    # 这里single_chunk_size要是设置成1000，就无法检索到相关内容
+    knowledge_chunks = chunk_text(extract_text, 2000, 200)
 
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")
     knowledge_embeddings = embedding_model.create_embeddings(
-        knowledge_chunks, show_progress=True)
-    print("")
+        knowledge_chunks)
+
     # 4. 构建问题向量
     info("--4--> 正在构建问题向量...")
     query_embeddings = embedding_model.create_embeddings([query])
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     # 5. 向量相似度检索
     info("--5--> 语义相似度检索...")
     top_chunks = context_enriched_search(
-        knowledge_chunks, knowledge_embeddings, query_embeddings, 5)
+        knowledge_chunks, knowledge_embeddings, query_embeddings, 5, 5)
 
     info(f"--5--> 搜索结果:")
     for i, result in enumerate(top_chunks):

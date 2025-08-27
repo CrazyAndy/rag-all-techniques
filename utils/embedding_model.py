@@ -1,7 +1,6 @@
 from sentence_transformers import SentenceTransformer
 import os
-
-from utils.common_utils import create_progress_bar
+from tqdm import tqdm
 
 
 class EmbeddingModel:
@@ -18,9 +17,8 @@ class EmbeddingModel:
             # print(f"使用在线模型: {model_name}")
             self.model = SentenceTransformer(model_name)
             # print(f"模型名称: {self.model.transformers_model.config.name_or_path}")
-            
 
-    def create_embeddings(self, text_chunks, batch_size=16, show_progress=False):
+    def create_embeddings(self, text_chunks, batch_size=16):
         """
         分批处理文本块创建嵌入向量，避免GPU内存不足
 
@@ -35,17 +33,16 @@ class EmbeddingModel:
         if isinstance(text_chunks, str):
             # 将单个文本包装成列表处理
             embeddings = self._batch_encode(
-                [text_chunks], batch_size, show_progress)
+                [text_chunks], batch_size)
             return embeddings[0]  # 返回单个嵌入向量
 
         # 处理文本列表的情况
         elif isinstance(text_chunks, list):
-            return self._batch_encode(text_chunks, batch_size, show_progress)
-
+            return self._batch_encode(text_chunks, batch_size)
         else:
             raise ValueError("text_chunks 必须是字符串或字符串列表")
 
-    def _batch_encode(self, text_chunks, batch_size, show_progress=False):
+    def _batch_encode(self, text_chunks, batch_size):
         """
         内部方法：分批编码文本块
 
@@ -57,20 +54,13 @@ class EmbeddingModel:
             list: 所有文本块的嵌入向量列表
         """
         all_embeddings = []
-        
-        process_bar = None
-        if show_progress:
-            process_bar = create_progress_bar(len(text_chunks), "创建嵌入向量", 100)
 
         # 分批处理文本块
+        # 不使用进度条
         for i in range(0, len(text_chunks), batch_size):
             batch = text_chunks[i:i + batch_size]
             # 处理当前批次
             batch_embeddings = self.model.encode(batch).tolist()
             all_embeddings.extend(batch_embeddings)
-            if show_progress:
-                process_bar.update_by_count(i)
-        if show_progress:
-            process_bar.finish()
 
         return all_embeddings
