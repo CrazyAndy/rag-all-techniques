@@ -26,6 +26,15 @@ def chunk_text(text, single_chunk_size, overlap):
         ['Hello', 'o, wo', 'rld!']
 
     '''
+    # 参数校验
+    if not text:
+        return []
+    if single_chunk_size <= 0:
+        raise ValueError("single_chunk_size must be positive")
+    if overlap < 0:
+        raise ValueError("overlap must be non-negative")
+    if overlap >= single_chunk_size:
+        raise ValueError("overlap must be less than single_chunk_size")
     chunks = []
     for i in range(0, len(text), single_chunk_size - overlap):
         chunks.append(text[i:i + single_chunk_size])
