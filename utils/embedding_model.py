@@ -35,7 +35,6 @@ class EmbeddingModel:
             embeddings = self._batch_encode(
                 [text_chunks], batch_size)
             return embeddings[0]  # 返回单个嵌入向量
-
         # 处理文本列表的情况
         elif isinstance(text_chunks, list):
             return self._batch_encode(text_chunks, batch_size)

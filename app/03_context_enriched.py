@@ -1,4 +1,5 @@
 import numpy as np
+from utils.common_utils import chunk_text_by_length
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from utils.llm_utils import query_llm
@@ -7,38 +8,6 @@ from utils.similarity_utils import cosine_similarity
 
 # 0. 构建全局向量模型
 embedding_model = EmbeddingModel()
-
-
-def chunk_text(text, single_chunk_size, overlap):
-    '''
-    将文本按单个块大小进行分割，并返回一个包含所有块的列表。
-
-    Args:
-        text (str): 要分割的文本
-        single_chunk_size (int): 单个块的大小
-        overlap (int): 块之间的重叠大小
-
-    Returns:
-        list: 包含所有块的列表
-
-    Example:
-        >>> chunk_text("Hello, world!", 5, 2)
-        ['Hello', 'o, wo', 'rld!']
-
-    '''
-    # 参数校验
-    if not text:
-        return []
-    if single_chunk_size <= 0:
-        raise ValueError("single_chunk_size must be positive")
-    if overlap < 0:
-        raise ValueError("overlap must be non-negative")
-    if overlap >= single_chunk_size:
-        raise ValueError("overlap must be less than single_chunk_size")
-    chunks = []
-    for i in range(0, len(text), single_chunk_size - overlap):
-        chunks.append(text[i:i + single_chunk_size])
-    return chunks
 
 
 def context_enriched_search(knowledge_chunks, knowledge_embeddings, query_embeddings, k=1, context_size=1):
@@ -93,7 +62,7 @@ if __name__ == "__main__":
     # 2. 分割文本
     info("---2--->正在分割文本...")
     # 这里single_chunk_size要是设置成1000，就无法检索到相关内容
-    knowledge_chunks = chunk_text(extract_text, 2000, 200)
+    knowledge_chunks = chunk_text_by_length(extract_text, 2000, 200)
 
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")

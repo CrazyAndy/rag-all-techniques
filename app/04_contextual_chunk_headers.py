@@ -1,4 +1,5 @@
 from tqdm import tqdm
+from utils.common_utils import validate_chunk_text_params
 from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from utils.llm_utils import query_llm
@@ -27,14 +28,8 @@ def chunk_text_with_headers(text, single_chunk_size, overlap):
 
     '''
     # 参数校验
-    if not text:
-        return []
-    if single_chunk_size <= 0:
-        raise ValueError("single_chunk_size must be positive")
-    if overlap < 0:
-        raise ValueError("overlap must be non-negative")
-    if overlap >= single_chunk_size:
-        raise ValueError("overlap must be less than single_chunk_size")
+    validate_chunk_text_params(text, single_chunk_size, overlap)
+    
     system_prompt = "为给定的文本生成一个简洁且信息全面的标题。"
     chunks = []
     for i in tqdm(range(0, len(text), single_chunk_size - overlap), desc="chunk_text_with_headers"):

@@ -61,7 +61,7 @@ def split_into_chunks(sentences, breakpoints):
     return chunks  # Return the list of chunks
 
 
-def chunk_text(extracted_text, method="percentile", threshold=90):
+def chunk_text_by_breakpoints(extracted_text, method="percentile", threshold=90):
     # 1. 分割文本
     info("--2.1--> 正在分割文本...")
     knowledge_sentences = extracted_text.split("。")
@@ -79,7 +79,7 @@ def chunk_text(extracted_text, method="percentile", threshold=90):
         similarity_score = cosine_similarity(
             knowledge_embeddings[i], knowledge_embeddings[i + 1])
         similarities.append(similarity_score)
-    
+
     # 4. 根据相似度计算断点
     info("--2.4--> 根据相似度计算断点...")
     breakpoints = compute_breakpoints(
@@ -142,7 +142,8 @@ if __name__ == "__main__":
 
     # 2. 分割文本
     info("--2--> 正在分割文本...")
-    knowledge_chunks = chunk_text(extract_text, "percentile", 90)
+    knowledge_chunks = chunk_text_by_breakpoints(
+        extract_text, "percentile", 90)
 
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")
