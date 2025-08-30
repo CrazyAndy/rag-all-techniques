@@ -64,7 +64,7 @@ def rerank_search_by_query_sentence(top_chunks, query):
             f"  {i+1}. 相关度分数: {result['relevance_score']:.4f} ")
         info(f"    文档: {result['text'][:100]}...")
         
-    return query_llm_with_top_chunks(reranked_results, query)
+    return query_llm_with_top_chunks(reranked_results[:min(5, len(reranked_results))], query)
 
 
 def rerank_search_by_query_keywords(top_chunks, query):
@@ -124,7 +124,7 @@ def rerank_search_by_query_keywords(top_chunks, query):
             f"  {i+1}. 相关度分数: {result['relevance_score']:.4f} ")
         info(f"    文档: {result['text'][:100]}...")    
     
-    return query_llm_with_top_chunks(reranked_results, query)
+    return query_llm_with_top_chunks(reranked_results[:min(5, len(reranked_results))], query)
 
 
 if __name__ == "__main__":
@@ -152,18 +152,25 @@ if __name__ == "__main__":
     # 5. 向量相似度检索
     info("--5--> 语义相似度检索...")
     top_chunks = similar_search(
-        knowledge_chunks, knowledge_embeddings, query_embeddings, 10)
+        knowledge_chunks, knowledge_embeddings, query_embeddings, 20)
 
     # 6. 根据查询句子和片段的相关性，重新排序
     info(f"--6--> 根据查询句子和片段的相关性，重新排序")
     answer_by_reranking_sentence = rerank_search_by_query_sentence(
         top_chunks, query)
-
+    info(f"\n\n")
+    info(f"--------------------------------")
     info(f"--6--> 根据查询句子和片段的相关性，llm答案：{answer_by_reranking_sentence}")
+    info(f"\n\n")
+    info(f"--------------------------------")
 
     # 7. 根据查询句子的关键词和片段的相似性，重新排序 ，这种也可以理解成句子和片段的相关性
     info(f"--7--> 根据查询句子的关键词和片段的相似性，重新排序")
     answer_by_reranking_keywords = rerank_search_by_query_keywords(
         top_chunks, query)
 
+    info(f"\n\n")
+    info(f"--------------------------------")
     info(f"--7--> 根据查询句子的关键词和片段的相似性，llm答案: {answer_by_reranking_keywords}")
+    info(f"\n\n")
+    info(f"--------------------------------")
