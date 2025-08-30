@@ -79,7 +79,7 @@ def create_embeddings_for_knowledge_chunks(knowledge_chunks, question_count_per_
     return knowledge_data, questions_data
 
 
-def semantic_search(query_embeddings, knowledge_data, questions_data, k=5):
+def similar_search(query_embeddings, knowledge_data, questions_data, k=5):
     similarity_scores = []
     # 确保查询向量是一维的
     if isinstance(query_embeddings, list):
@@ -94,30 +94,30 @@ def semantic_search(query_embeddings, knowledge_data, questions_data, k=5):
         similarity_score = cosine_similarity(
             single_data["chunk_embedding"], query_vector)
         similarity_scores.append(
-            (single_data["chunk_index"], single_data["chunk_text"], similarity_score))
+            (single_data["chunk_index"],  similarity_score))
 
     for single_data in questions_data:
         # 计算查询嵌入与当前文本块嵌入之间的余弦相似度
         similarity_score = cosine_similarity(
             single_data["question_embedding"], query_vector)
         similarity_scores.append(
-            (single_data["chunk_index"], single_data["chunk_text"], similarity_score))
+            (single_data["chunk_index"],  similarity_score))
 
     # 按相似度分数降序排序（相似度最高排在前面）
-    similarity_scores.sort(key=lambda x: x[2], reverse=True)
+    similarity_scores.sort(key=lambda x: x[1], reverse=True)
 
     final_similarity_scores = []
-    for index, text, score in similarity_scores:
+    for chunk_index, chunk_score in similarity_scores:
         if len(final_similarity_scores) == k:
             break
         # 检查是否已经存在相同index的元素，如果存在则跳过
-        if any(item["index"] == index for item in final_similarity_scores):
+        if any(item["index"] == chunk_index for item in final_similarity_scores):
             continue
 
         final_similarity_scores.append({
-            "index": index,
-            "text": text,
-            "score": score
+            "index": chunk_index,
+            "text": knowledge_data[chunk_index]["chunk_text"],
+            "score": chunk_score
         })
 
     # Return the top-k most relevant chunks
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # 5. 向量相似度检索
     info("--5--> 语义相似度检索...")
-    top_chunks = semantic_search(
+    top_chunks = similar_search(
         query_embeddings, knowledge_data, questions_data, 5)
 
     info(f"--5--> 搜索结果:")

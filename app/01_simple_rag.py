@@ -3,52 +3,10 @@ from utils.embedding_model import EmbeddingModel
 from utils.file_utils import extract_text_from_markdown
 from dotenv import load_dotenv
 from utils.llm_utils import query_llm
-from utils.similarity_utils import cosine_similarity
-from utils.logger_utils import info, print_with_time
+from utils.similarity_utils import similar_search
+from utils.logger_utils import info
 
 load_dotenv()
-
-
-def similar_search(text_chunks, knowledge_base_embeddings, query_embeddings, k=5):
-    """
-    语义搜索，计算相似度并返回最相关的文本块
-
-    Args:
-        text_chunks: 知识库文本块列表
-        knowledge_base_embeddings: 知识库嵌入向量列表
-        query_embeddings: 查询嵌入向量
-        k: 返回结果数量
-
-    Returns:
-        list: 包含文本块和相似度分数的字典列表
-    """
-    similarity_scores = []
-
-    # 确保查询向量是一维的
-    if isinstance(query_embeddings, list):
-        query_vector = query_embeddings[0]
-    elif hasattr(query_embeddings, 'shape') and len(query_embeddings.shape) > 1:
-        query_vector = query_embeddings[0]
-    else:
-        query_vector = query_embeddings
-
-    for i, chunk_embedding in enumerate(knowledge_base_embeddings):
-        similarity_score = cosine_similarity(chunk_embedding, query_vector)
-        similarity_scores.append((i, similarity_score))
-
-    # 按相似度降序排序
-    similarity_scores.sort(key=lambda x: x[1], reverse=True)
-
-    # 返回包含文本块和相似度分数的结果
-    results = []
-    for index, score in similarity_scores[:k]:
-        results.append({
-            'text': text_chunks[index],
-            'score': score,
-            'index': index
-        })
-
-    return results
 
 
 if __name__ == "__main__":

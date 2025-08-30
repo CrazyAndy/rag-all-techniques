@@ -59,7 +59,7 @@ def create_embeddings_for_knowledge_chunks(knowledge_chunks):
     return knowledge_embeddings
 
 
-def semantic_search(knowledge_embeddings, query_embeddings, k=5):
+def similar_search(knowledge_chunks,knowledge_embeddings, query_embeddings, k=5):
     similarity_scores = []
     # 确保查询向量是一维的
     if isinstance(query_embeddings, list):
@@ -69,7 +69,7 @@ def semantic_search(knowledge_embeddings, query_embeddings, k=5):
     else:
         query_vector = query_embeddings
 
-    for chunk in knowledge_embeddings:
+    for chunk_index, chunk in enumerate(knowledge_embeddings):
         # 计算查询嵌入与当前文本块嵌入之间的余弦相似度
         similarity_score_content = cosine_similarity(
             chunk["content_embedding"], query_vector)
@@ -79,13 +79,21 @@ def semantic_search(knowledge_embeddings, query_embeddings, k=5):
         # 计算平均相似度分数
         avg_similarity = (similarity_score_content +
                           similarity_score_header) / 2
-        chunk["score"] = avg_similarity
-        similarity_scores.append((chunk, avg_similarity))
+        similarity_scores.append((chunk_index, avg_similarity))
 
     # 按相似度分数降序排序（相似度最高排在前面）
     similarity_scores.sort(key=lambda x: x[1], reverse=True)
-    # Return the top-k most relevant chunks
-    return [x[0] for x in similarity_scores[:k]]
+     # 返回包含文本块和相似度分数的结果
+    results = []
+    for index in range(min(k, len(similarity_scores))):
+        chunk_index, chunk_score = similarity_scores[index]
+        results.append({
+            'text': knowledge_chunks[chunk_index]["text"],
+            'score': chunk_score,
+            'index': chunk_index
+        })
+
+    return results
 
 
 if __name__ == "__main__":
@@ -113,7 +121,7 @@ if __name__ == "__main__":
 
     # 5. 向量相似度检索
     info("--5--> 语义相似度检索...")
-    top_chunks = semantic_search(knowledge_embeddings, query_embeddings, 5)
+    top_chunks = similar_search(knowledge_chunks,knowledge_embeddings, query_embeddings, 5)
 
     info(f"--5--> 搜索结果:")
     for i, result in enumerate(top_chunks):
