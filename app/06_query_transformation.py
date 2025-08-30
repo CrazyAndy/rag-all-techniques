@@ -10,9 +10,6 @@ import re
 # 0. 构建全局向量模型
 embedding_model = EmbeddingModel()
 
-
-
-
 def transformed_search_by_rewrite(original_query, knowledge_chunks, knowledge_embeddings, top_k=3):
     # 定义系统提示，指导AI助手的行为
     system_prompt = "您是一个专注于优化搜索查询的AI助手。您的任务是通过重写用户查询，使其更加具体、详细，并提升检索相关信息的有效性。"
