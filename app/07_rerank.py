@@ -45,8 +45,8 @@ def rerank_search_by_query_sentence(top_chunks, query):
             score = float(score_match.group(1))
         else:
             # 如果评分提取失败，使用相似度评分作为备选
-            print(f"警告：无法从响应中提取评分：'{score_text}'，使用相似度评分代替")
-            score = result["similarity"] * 10
+            info(f"警告：无法从响应中提取评分：'{score_text}'，使用相似度评分代替")
+            score = result["score"] * 10
 
         # 将评分结果添加到列表中
         scored_results.append({
@@ -54,10 +54,16 @@ def rerank_search_by_query_sentence(top_chunks, query):
             "similarity": chunk["score"],
             "relevance_score": score
         })
-
     # 按相关性评分降序对结果进行排序
     reranked_results = sorted(
         scored_results, key=lambda x: x["relevance_score"], reverse=True)
+        
+    info(f"--6--> 根据查询句子和片段的相关性，重新排序，相关度评分")
+    for i, result in enumerate(reranked_results):
+        info(
+            f"  {i+1}. 相关度分数: {result['relevance_score']:.4f} ")
+        info(f"    文档: {result['text'][:100]}...")
+        
     return query_llm_with_top_chunks(reranked_results, query)
 
 
@@ -111,6 +117,13 @@ def rerank_search_by_query_keywords(top_chunks, query):
     # 按相关性评分降序对结果进行排序
     reranked_results = sorted(
         scored_results, key=lambda x: x["relevance_score"], reverse=True)
+        
+    info(f"--7--> 根据查询句子的关键词和片段的相似性，重新排序，相关度评分")
+    for i, result in enumerate(reranked_results):
+        info(
+            f"  {i+1}. 相关度分数: {result['relevance_score']:.4f} ")
+        info(f"    文档: {result['text'][:100]}...")    
+    
     return query_llm_with_top_chunks(reranked_results, query)
 
 
@@ -140,12 +153,6 @@ if __name__ == "__main__":
     info("--5--> 语义相似度检索...")
     top_chunks = similar_search(
         knowledge_chunks, knowledge_embeddings, query_embeddings, 10)
-
-    info(f"--5--> 搜索结果:")
-    for i, result in enumerate(top_chunks):
-        info(
-            f"  {i+1}. 相似度分数: {result['score']:.4f} ")
-        info(f"    文档: {result['text'][:100]}...")
 
     # 6. 根据查询句子和片段的相关性，重新排序
     info(f"--6--> 根据查询句子和片段的相关性，重新排序")
