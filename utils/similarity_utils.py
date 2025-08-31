@@ -47,7 +47,7 @@ def similar_search(knowledge_chunks, knowledge_base_embeddings, query_embeddings
 
     # 按相似度降序排序
     similarity_scores.sort(key=lambda x: x[1], reverse=True)
-
+    
     # 返回包含文本块和相似度分数的结果
     results = []
     for index in range(min(k, len(similarity_scores))):

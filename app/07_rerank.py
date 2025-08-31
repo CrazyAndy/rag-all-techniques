@@ -139,6 +139,10 @@ if __name__ == "__main__":
     info("---2--->正在分割文本...")
     # 这里single_chunk_size要是设置成1000，就无法检索到相关内容
     knowledge_chunks = chunk_text_by_length(extract_text, 1000, 200)
+    
+    info(f"--------------------------------")
+    info(f"分割后的文本块数量: {len(knowledge_chunks)}")
+    info(f"--------------------------------")
 
     # 3. 将知识库文本块向量化
     info("--3--> 正在构建知识库向量集...")
