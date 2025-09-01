@@ -12,7 +12,7 @@ from utils.logger_utils import info
 embedding_model = EmbeddingModel()
 
 
-def find_best_segments_sorted_greedy(chunk_values, top_k=5, max_segment_length=20, total_max_length=30, min_segment_value=0.2):
+def find_best_segments_sorted_greedy(knowledge_chunk_values, top_k=5, max_segment_length=20, total_max_length=30, min_segment_value=0.2):
     """
     排序贪心算法 (Sorted Greedy Algorithm)
 
@@ -33,16 +33,15 @@ def find_best_segments_sorted_greedy(chunk_values, top_k=5, max_segment_length=2
     Returns:
         List[Tuple[int, int]]: 最佳段落的（开始，结束）索引列表
     """
-    print("使用排序贪心算法寻找最佳连续文本段落...")
 
-    n = len(chunk_values)
+    n = len(knowledge_chunk_values)
 
     # 步骤1: 生成候选段落 - O(n × max_segment_length)
     candidates = []
     for start in range(n):
         for length in range(1, min(max_segment_length, n - start) + 1):
             end = start + length
-            segment_sum = sum(chunk_values[start:end])
+            segment_sum = sum(knowledge_chunk_values[start:end])
             segment_avg = segment_sum / length
 
             # 评分函数：总得分 + 密度奖励
@@ -51,9 +50,12 @@ def find_best_segments_sorted_greedy(chunk_values, top_k=5, max_segment_length=2
             if score >= min_segment_value:
                 candidates.append((score, start, end))
 
-    # 步骤2: 按得分降序排序 - O(n × max_segment_length × log(n × max_segment_length))
+    # 步骤2：重新排序候选段落
+    # 如果不排序，算法会按照生成顺序（通常是按起始位置和长度）来选择段落
+    # 可能会先选择得分较低的段落，占用位置后，得分更高的段落因为重叠而被拒绝
+    # 最终选择的段落组合不是最优的            
     candidates.sort(key=lambda x: x[0], reverse=True)
-
+    
     # 步骤3: 贪心选择非重叠段落 - O(n × max_segment_length)
     best_segments = []
     total_included_chunks = 0
