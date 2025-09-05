@@ -14,6 +14,11 @@ def cosine_similarity(vec1, vec2):
     Returns:
     float: The cosine similarity between the two vectors.
     """
+    
+    # 转换为numpy数组并确保是一维的
+    vec1 = np.asarray(vec1).flatten()
+    vec2 = np.asarray(vec2).flatten()
+    
     # Compute the dot product of the two vectors and divide by the product of their norms
     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
