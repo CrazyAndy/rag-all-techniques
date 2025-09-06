@@ -213,3 +213,5 @@ uv.lock
 chroma_db/
 
 .obsidian/
+
+feedback_data.json
