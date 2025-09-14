@@ -39,3 +39,5 @@ def query_llm_with_top_chunks(top_chunks, query):
 
     # 7. 调用LLM模型，生成回答
     return query_llm(system_prompt, user_prompt)
+
+

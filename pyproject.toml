@@ -20,6 +20,11 @@ dependencies = [
     "chromadb>=0.4.0",
     "sentence-transformers>=2.0.0",
     "tqdm>=4.65.0",
+    "neo4j==5.28.2",
+    "spacy==3.8.7",
+    "pip>=25.2",
+    "jieba>=0.42.1",
+    "rank-bm25>=0.2.2",
 ]
 
 [project.optional-dependencies]
