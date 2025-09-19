@@ -166,28 +166,24 @@ if __name__ == "__main__":
     knowledge_chunks = chunk_text_by_length(extract_text, 1000, 200)
     # print(f"分割为 {len(text_chunks)} 个文本块")
 
-    # 3. 构建向量数据库
-    info("---3--->正在构建向量模型...")
-    embedding_model = EmbeddingModel()
-
-    # 4. 将知识库文本块向量化
-    info("---4--->正在构建知识库向量集...")
+    # 3. 将知识库文本块向量化
+    info("---3--->正在构建知识库向量集...")
     knowledge_embeddings = embedding_model.create_embeddings(knowledge_chunks)
 
-    # 5. 构建问题向量
-    info("---5--->正在构建问题向量...")
+    # 4. 构建问题向量
+    info("---4--->正在构建问题向量...")
     query_embeddings = embedding_model.create_embeddings([query])
 
-    # 6. 构建 BM25 索引
-    info("---6--->正在构建 BM25 索引...")
+    # 5. 构建 BM25 索引
+    info("---5--->正在构建 BM25 索引...")
     bm25_index = create_bm25_index(knowledge_chunks)
     
-    # 7. 将问题按空格分割成单独的词
-    info("---7--->将问题按空格分割成单独的词...")
+    # 6. 将问题按空格分割成单独的词
+    info("---6--->将问题按空格分割成单独的词...")
     query_tokens = list(jieba.cut(query))   # 中文
     
-    # 8. 创建综合评分
-    info("---8--->创建综合评分...")
+    # 7. 创建综合评分
+    info("---7--->创建综合评分...")
     top_chunks = create_score_for_knowledge_chunks(query,query_embeddings,query_tokens,knowledge_chunks,knowledge_embeddings,bm25_index,k=5,alpha=0.5)
     
 
@@ -208,5 +204,5 @@ if __name__ == "__main__":
 
     # 7. 调用LLM模型，生成回答
     result = query_llm(system_prompt, user_prompt)
-    info(f"---7--->final result: {result}")
+    info(f"--8--->final result: {result}")
 

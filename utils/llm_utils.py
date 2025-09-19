@@ -10,20 +10,27 @@ llm_client = OpenAI(
 )
 
 
-def query_llm(system_prompt, user_prompt, temperature=0.1, top_p=0.8):
+def query_llm(system_prompt, user_prompt, temperature=0.1, top_p=0.8, max_tokens=None):
     model_name = os.getenv("DEFAULT_MODEL")
 
-    completion = llm_client.chat.completions.create(
-        model=model_name,
-        temperature=temperature,
-        top_p=top_p,
-        # stream=True,  # 启用流式输出
-        extra_body={"enable_thinking": False},
-        messages=[
+    # 构建API调用参数，消除代码重复
+    params = {
+        "model": model_name,
+        "temperature": temperature,
+        "top_p": top_p,
+        "extra_body": {"enable_thinking": False},
+        "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-    )
+    }
+    
+    # 只有当max_tokens不为None时才添加该参数
+    if max_tokens is not None:
+        params["max_tokens"] = max_tokens
+    
+    completion = llm_client.chat.completions.create(**params)
+    
     return completion.choices[0].message.content
 
 
